@@ -277,83 +277,78 @@ void completeAnd(struct set *set) {
 
 /*
 * Function: complete tableau for a case of a disjunction formula type
-* Returns: nothing, works on the set structure pointers "set", "head" and a tableau structure pointer "tableau"
+* Returns: nothing, works on the set structure pointers "set", "currHead" and a tableau structure pointer "tableau"
 */
-void completeOr(struct set *set, struct set *head, struct tableau *tableau) {
-    struct tableau *new_tableau = (struct tableau *) malloc(sizeof(struct tableau));
-    struct set *new_set = (struct set *) malloc(sizeof(struct set));
-    struct set *set_head = head;
-    new_tableau->S = new_set;
-    
-    while (strcmp(set_head->item, set->item) != 0) {
-        new_set->item = set_head->item;
-        new_set->tail = (struct set *) malloc(sizeof(struct set));
-        new_set = new_set->tail;
-        set_head = set_head->tail;
-    }
-
-    new_set->item = parttwo(set->item);
-    set_head = set_head->tail;
-
-    if (set_head) {
-        new_set->tail = (struct set *) malloc(sizeof(struct set));
-        new_set = new_set->tail;
-
-        while (set_head) {
-            new_set->item = set_head->item;
-            if (set_head->tail) {
-                new_set->tail = (struct set *) malloc(sizeof(struct set));
-                new_set = new_set->tail;
-            } else {
-                new_set->tail = NULL;
-            }
-            set_head = set_head->tail;
-        }
-    } else {
-        new_set->tail = NULL;
-    }
-    set->item = partone(set->item);
-    new_tableau->rest = tableau->rest;
-    tableau->rest = new_tableau;
-}
-
-/*
-* Function: complete tableau for a case of an implication formula type
-* Returns: nothing, works on the set structure pointers "set", "head" and a tableau structure pointer "tableau"
-*/
-void completeImplication(struct set *set, struct set *head, struct tableau *tableau) {
+void completeOr(struct set *set, struct set *currHead, struct tableau *tableau) {
     struct tableau *newTableau = (struct tableau *) malloc(sizeof(struct tableau));
     struct set *newSet = (struct set *) malloc(sizeof(struct set));
+    struct set *currentSet = currHead;
+    
     newTableau->S = newSet;
-    struct set *cS = head;
-    while (strcmp(cS->item, set->item) != 0) {
-        newSet->item = cS->item;
+    while (strcmp(currentSet->item, set->item) != 0) {
+        newSet->item = currentSet->item;
         newSet->tail = (struct set *) malloc(sizeof(struct set));
         newSet = newSet->tail;
-        cS = cS->tail;
+        currentSet = currentSet->tail;
     }
+
     newSet->item = parttwo(set->item);
-    cS = cS->tail;
-    if (cS) {
+    currentSet = currentSet->tail;
+
+    if (currentSet) {
         newSet->tail = (struct set *) malloc(sizeof(struct set));
         newSet = newSet->tail;
-        while (cS) {
-            newSet->item = cS->item;
-            if (cS->tail) {
-                newSet->tail = (struct set *) malloc(sizeof(struct set));
-                newSet = newSet->tail;
-            } else {
-                newSet->tail = NULL;
-            }
-            cS = cS->tail;
+        while (currentSet) {
+            newSet->item = currentSet->item;
+            if (currentSet->tail) newSet = (struct set *) malloc(sizeof(struct set));
+            else newSet->tail = NULL;
+            currentSet = currentSet->tail;
         }
     } else {
         newSet->tail = NULL;
     }
-    char *nP1 = (char *) malloc(sizeof(char) * Fsize);
-    strcat(nP1, "-");
-    strcat(nP1, partone(set->item));
-    set->item = nP1;
+    
+    set->item = partone(set->item);
+    newTableau->rest = tableau->rest;
+    tableau->rest = newTableau;
+}
+
+/*
+* Function: complete tableau for a case of an implication formula type
+* Returns: nothing, works on the set structure pointers "set", "currHead" and a tableau structure pointer "tableau"
+*/
+void completeImplication(struct set *set, struct set *currHead, struct tableau *tableau) {
+    struct tableau *newTableau = (struct tableau *) malloc(sizeof(struct tableau));
+    struct set *newSet = (struct set *) malloc(sizeof(struct set));
+    struct set *currentSet = currHead;
+    char *firstPart = (char *) malloc(sizeof(char) * Fsize);
+    
+    newTableau->S = newSet;  
+    while (strcmp(currentSet->item, set->item) != 0) {
+        newSet->item = currentSet->item;
+        newSet->tail = (struct set *) malloc(sizeof(struct set));
+        newSet = newSet->tail;
+        currentSet = currentSet->tail;
+    }
+    newSet->item = parttwo(set->item);
+    currentSet = currentSet->tail;
+    
+    if (currentSet) {
+        newSet->tail = (struct set *) malloc(sizeof(struct set));
+        newSet = newSet->tail;
+        while (currentSet) {
+            newSet->item = currentSet->item;
+            if (currentSet->tail) newSet = (struct set *) malloc(sizeof(struct set));
+            else newSet->tail = NULL;
+            currentSet = currentSet->tail;
+        }
+    } else {
+        newSet->tail = NULL;
+    }
+
+    strcat(firstPart, "-");
+    strcat(firstPart, partone(set->item));
+    set->item = firstPart;
     newTableau->rest = tableau->rest;
     tableau->rest = newTableau;
 }
@@ -422,7 +417,7 @@ void complete(struct tableau *t) {
 
     while (tableau) {
         set = tableau->S;
-        struct set *head = tableau->S;
+        struct set *currHead = tableau->S;
 
         while (set) {
             int isTerminal = terminalElement(set->item);
@@ -443,9 +438,9 @@ void complete(struct tableau *t) {
                 if (operator == '^') {
                     completeAnd(set); // highest level is a conjunction
                 } else if (operator == '>') {
-                    completeImplication(set, head, tableau); // highest level is an implication
+                    completeImplication(set, currHead, tableau); // highest level is an implication
                 } else if (operator == 'v') {
-                    completeOr(set, head, tableau); // highest level is a disjunction
+                    completeOr(set, currHead, tableau); // highest level is a disjunction
                 }
             } else { // If it is a proposition
                 set = set->tail;
@@ -495,10 +490,8 @@ int main() {
                 printf("%s is a negation.\n", name);
                 break;
             case (3):
-                fprintf(fpout, "%s is a binary. The first part is %s and the second part is %s  \n", name,
-                        partone(name), parttwo(name));
-                printf("%s is a binary. The first part is %s and the second part is %s  \n", name, partone(name),
-                       parttwo(name));
+                fprintf(fpout, "%s is a binary. The first part is %s and the second part is %s  \n", name, partone(name), parttwo(name));
+                printf("%s is a binary. The first part is %s and the second part is %s  \n", name, partone(name), parttwo(name));
                 break;
             default:
                 printf("Invalid input!\n");
@@ -528,7 +521,9 @@ int main() {
 
             /* Frees all the bits of memory on the tableau*/
             free(t);
-        } else fprintf(fpout, "I told you, %s is not a formula.\n", name);
+        } else {
+            fprintf(fpout, "I told you, %s is not a formula.\n", name);
+        }
     }
 
     fclose(fp);
