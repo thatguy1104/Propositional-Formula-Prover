@@ -94,7 +94,8 @@ char *partition(char *g, int start, int end) {
     int length_of_seg = end - start;
     char *partitioned = (char *) malloc(((sizeof(g) / 2) + 1) * sizeof(char));
 
-    for (int i = 0; i < length_of_seg; i++) {
+    int i;
+    for (i = 0; i < length_of_seg; i++) {
         partitioned[i] = g[i + start];
     }
 
@@ -170,9 +171,9 @@ struct tableau {
 */
 char *removeNegative(char *t, int num_of_negs) {
     char *g = (char *) malloc(((sizeof(t) - 1) * sizeof(char)));
-    int i = 0;
-
-    for (int k = num_of_negs; k < strlen(t); k++) {
+    int i = 0, k;
+    
+    for (k = num_of_negs; k < strlen(t); k++) {
         g[i] = t[k];
         i++;
     }
@@ -197,7 +198,9 @@ int terminalElement(char *g) {
 */
 char *concatStrings(char **lst, int size) {
     char *g = (char *) malloc(sizeof(char) * Fsize);
-    for (int i = 0; i < size; i++) {
+    int i;
+
+    for (i = 0; i < size; i++) {
         strcat(g, lst[i]);
     }
     return g;
@@ -380,7 +383,8 @@ int check_closure(const int *seen) {
 * Returns: nothing, as it edits the given pointer to the integer list "lst"
 */
 void empty_list(int *lst) {
-    for (int i = 0; i < 6; i++) lst[i] = 0;
+    int i;
+    for (i = 0; i < 6; i++) lst[i] = 0;
 }
 
 /*
@@ -479,23 +483,18 @@ int main() {
         switch (parse(name)) {
             case (0):
                 fprintf(fpout, "%s is not a formula.\n", name);
-                printf("%s is not a formula.  \n", name);
                 break;
             case (1):
                 fprintf(fpout, "%s is a proposition.\n ", name);
-                printf("%s is a proposition. \n ", name);
                 break;
             case (2):
                 fprintf(fpout, "%s is a negation.\n", name);
-                printf("%s is a negation.\n", name);
                 break;
             case (3):
                 fprintf(fpout, "%s is a binary. The first part is %s and the second part is %s  \n", name, partone(name), parttwo(name));
-                printf("%s is a binary. The first part is %s and the second part is %s  \n", name, partone(name), parttwo(name));
                 break;
             default:
                 printf("Invalid input!\n");
-                fprintf(fpout, "Invalid input");
         }
 
         if (parse(name) != 0) {
@@ -512,10 +511,8 @@ int main() {
             /* Completes the tableau and checks if it is closed */
             complete(t);
             if (closed(t)) {
-                printf("%s is not satisfiable.\n", name);
                 fprintf(fpout, "%s is not satisfiable.\n", name);
             } else {
-                printf("%s is satisfiable.\n", name);
                 fprintf(fpout, "%s is satisfiable.\n", name);
             }
 
